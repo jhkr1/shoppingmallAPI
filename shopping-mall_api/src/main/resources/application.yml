@@ -1,0 +1,4 @@
+# key? 32byte (256bit)??
+jwt:
+  secretKey: 9f7c3d2e1b0a5f6e8c7d4a1b6e9f2c3d
+  refreshKey: 9f7c3d2e1b0a5f6e8c7d4a1b6e9f2c3d
