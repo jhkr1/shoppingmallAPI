@@ -22,6 +22,7 @@ import static org.springframework.http.HttpMethod.POST;
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
+
     private final AuthenticationManagerConfig authenticationManagerConfig;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
@@ -39,9 +40,10 @@ public class SecurityConfig {
                 .httpBasic().disable()
                 .authorizeRequests()
                 .requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
-                .mvcMatchers(GET, "/**").hasAnyRole("USER", "MANAGER", "ADMIN")
-                .mvcMatchers(POST, "/**").hasAnyRole("USER", "MANAGER", "ADMIN")
-                .anyRequest().hasAnyRole()
+                .mvcMatchers("/members/signup","/members/login","/members/refreshToken").permitAll()
+                .mvcMatchers(GET, "/**").hasAnyRole("USER", "ADMIN")
+                .mvcMatchers(POST, "/**").hasAnyRole("USER", "ADMIN")
+                .anyRequest().hasAnyRole("USER", "ADMIN")
                 .and()
                 .exceptionHandling()
                 .authenticationEntryPoint(customAuthenticationEntryPoint)

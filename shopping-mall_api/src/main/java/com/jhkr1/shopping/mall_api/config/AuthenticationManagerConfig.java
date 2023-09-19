@@ -21,6 +21,6 @@ public class AuthenticationManagerConfig extends AbstractHttpConfigurer<Authenti
         builder.addFilterBefore(
                         new JwtAuthenticationFilter(authenticationManager),
                         UsernamePasswordAuthenticationFilter.class)
-                .authenticationProvider(jwtAuthenticationProvider);
+                        .authenticationProvider(jwtAuthenticationProvider);
     }
 }
