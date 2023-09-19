@@ -3,13 +3,11 @@ package com.jhkr1.shopping.mall_api.controller;
 import com.jhkr1.shopping.mall_api.domain.Member;
 import com.jhkr1.shopping.mall_api.domain.RefreshToken;
 import com.jhkr1.shopping.mall_api.domain.Role;
-import com.jhkr1.shopping.mall_api.dto.MemberLoginDto;
-import com.jhkr1.shopping.mall_api.dto.MemberLoginResponseDto;
-import com.jhkr1.shopping.mall_api.dto.MemberSignupDto;
-import com.jhkr1.shopping.mall_api.dto.MemberSignupResponseDto;
+import com.jhkr1.shopping.mall_api.dto.*;
 import com.jhkr1.shopping.mall_api.security.jwt.util.JwtTokenizer;
 import com.jhkr1.shopping.mall_api.service.MemberService;
 import com.jhkr1.shopping.mall_api.service.RefreshTokenService;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,8 +32,8 @@ public class MemberController {
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/signup")
-    public ResponseEntity signup(@RequestBody @Valid MemberSignupDto memberSignupDto, BindingResult bindingResult){
-        if(bindingResult.hasErrors()) {
+    public ResponseEntity signup(@RequestBody @Valid MemberSignupDto memberSignupDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
             return new ResponseEntity(HttpStatus.BAD_REQUEST);
         }
         Member member = new Member();
@@ -55,9 +53,12 @@ public class MemberController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody @Valid MemberLoginDto loginDto) {
+    public ResponseEntity login(@RequestBody @Valid MemberLoginDto loginDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return new ResponseEntity(HttpStatus.BAD_REQUEST);
+        }
         Member member = memberService.findByEmail(loginDto.getEmail());
-        if(!passwordEncoder.matches(loginDto.getPassword(), member.getPassword())){
+        if (!passwordEncoder.matches(loginDto.getPassword(), member.getPassword())) {
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
         }
 
@@ -83,7 +84,33 @@ public class MemberController {
     }
 
     @DeleteMapping("/logout")
-    public ResponseEntity logout(@RequestHeader("Authorization") String token) {
-        return new ResponseEntity(HttpStatus.NO_CONTENT);
+    public ResponseEntity logout(@RequestBody RefreshTokenDto refreshTokenDto) {
+        refreshTokenService.deleteRefreshToken(refreshTokenDto.getRefreshToken());
+        return new ResponseEntity(HttpStatus.OK);
+    }
+
+    @PostMapping("/refreshToken")
+    public ResponseEntity requestRefresh(@RequestBody RefreshTokenDto refreshTokenDto) {
+        RefreshToken refreshToken = refreshTokenService.findRefreshToken(refreshTokenDto.getRefreshToken()).orElseThrow(() ->
+        new IllegalArgumentException("Refresh token not found"));
+        Claims claims = jwtTokenizer.parseRefreshToken(refreshToken.getValue());
+
+        Long userId = Long.valueOf((Integer) claims.get("userId"));
+
+        Member member = memberService.getMember(userId).orElseThrow(() -> new IllegalArgumentException("Member not found"));
+
+        List roles = (List) claims.get("roles");
+        String email = claims.getSubject();
+
+        String accessToken = jwtTokenizer.createAccessToken(userId, email, roles);
+
+        MemberLoginResponseDto loginResponse = MemberLoginResponseDto.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshTokenDto.getRefreshToken())
+                .memberId(member.getMemberId())
+                .nickname(member.getName())
+                .build();
+        return new ResponseEntity(loginResponse, HttpStatus.OK);
+
     }
 }

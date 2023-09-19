@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -25,7 +26,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AuthenticationManager authenticationManager;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
         String token="";
         try {
             token = getToken(request);
@@ -69,9 +71,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void getAuthentication(String token) {
         JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(token);
-        authenticationManager.authenticate(authenticationToken);
+        Authentication authenticate = authenticationManager.authenticate(authenticationToken);
         SecurityContextHolder.getContext()
-                .setAuthentication(authenticationToken);
+                .setAuthentication(authenticate);
     }
 
     private String getToken(HttpServletRequest request) {
@@ -82,5 +84,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         return null;
     }
-
 }
