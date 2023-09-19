@@ -1,8 +1,8 @@
 package com.jhkr1.shopping.mall_api.repository;
 
+import com.jhkr1.shopping.mall_api.domain.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.lang.reflect.Member;
 import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
