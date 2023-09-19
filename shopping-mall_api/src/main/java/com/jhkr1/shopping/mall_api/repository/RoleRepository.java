@@ -1,5 +1,6 @@
 package com.jhkr1.shopping.mall_api.repository;
 
+import com.jhkr1.shopping.mall_api.domain.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 
